@@ -611,6 +611,33 @@ def test_json_nested_frozenset_round_trip():
     assert converter.from_payload(payload, set[frozenset[int]]) == value
 
 
+@pytest.mark.parametrize("value", [[], [5]])
+def test_json_fixed_tuple_requires_all_elements(value: list[int]) -> None:
+    converter = JSONPlainPayloadConverter()
+    payload = converter.to_payload(value)
+    assert payload
+    with pytest.raises(TypeError, match="expecting 2 values"):
+        converter.from_payload(payload, tuple[int, str])
+
+
+@pytest.mark.parametrize(
+    "hint,value,expected",
+    [
+        (tuple[int, str], [5, "six"], (5, "six")),
+        (tuple[int, ...], [], ()),
+        (tuple[int, ...], [5], (5,)),
+        (tuple, [5], (5,)),
+    ],
+)
+def test_json_tuple_valid_lengths(
+    hint: Any, value: list[Any], expected: tuple[Any, ...]
+) -> None:
+    converter = JSONPlainPayloadConverter()
+    payload = converter.to_payload(value)
+    assert payload
+    assert converter.from_payload(payload, hint) == expected
+
+
 def test_json_type_hints():
     converter = JSONPlainPayloadConverter()
 

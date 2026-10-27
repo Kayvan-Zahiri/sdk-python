@@ -1097,6 +1097,14 @@ def value_to_type(
                     raise TypeError(f"Failed converting {hint} index {i}") from err
         # If tuple, set, frozenset, or deque convert back to that type
         if origin is tuple:
+            if (
+                type_args
+                and type_args[-1] is not Ellipsis
+                and len(ret_list) < len(type_args)
+            ):
+                raise TypeError(
+                    f"Type {hint} expecting {len(type_args)} values, got {len(ret_list)}"
+                )
             return tuple(ret_list)
         elif origin is set:
             return set(ret_list)
